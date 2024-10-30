@@ -59,11 +59,11 @@ Este projeto tem como objetivo desenvolver uma plataforma de Gestão Eletrônica
    - Certifique-se de que o MinIO está em execução e crie um bucket para armazenar os documentos.
 5. Execute a aplicação:
    ```bash
-   python start.py
+   python app.py
    ```
 
 6. **Acesse a documentação da API via Swagger:**
-   - Abra seu navegador e vá para http://localhost:5000/apidocs/.
+   - Abra seu navegador e vá para http://localhost:9999/apidocs/.
 
 ## Uso
 
