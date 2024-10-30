@@ -1,0 +1,2 @@
+Invoke-WebRequest -Uri "https://dl.min.io/server/minio/release/windows-amd64/minio.exe" -OutFile .\minio.exe
+.\minio.exe server .\MINIO --console-address ":9001"
