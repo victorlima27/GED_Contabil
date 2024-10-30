@@ -42,6 +42,17 @@ Este projeto tem como objetivo desenvolver uma plataforma de Gestão Eletrônica
 
 2. Navegue até o diretório do projeto:
    ```bash
-   cd GED_Contabil```
+   cd GED_Contabil
 
-3.
+3. Instale as dependências:
+   ```bash
+   pip install -r requirements.txt
+
+4. Configuração MinIO (Windows):
+   ```bash
+   Invoke-WebRequest -Uri "https://dl.min.io/server/minio/release/windows-amd64/minio.exe" -OutFile .\MINIO\minio.exe
+   .\MINIO\minio.exe server .\MINIO --console-address ":9001"
+- Certifique-se de que o MinIO está em execução e crie um bucket para armazenar os documentos.
+5. Execute a aplicação:
+  ```bash
+  python start.py
