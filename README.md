@@ -61,3 +61,15 @@ Este projeto tem como objetivo desenvolver uma plataforma de Gestão Eletrônica
    ```bash
    python start.py
    ```
+
+6. **Acesse a documentação da API via Swagger:**
+   - Abra seu navegador e vá para http://localhost:5000/apidocs/.
+
+## Uso
+
+### Endpoints disponíveis:
+
+-
+-
+-
+
