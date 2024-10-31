@@ -3,7 +3,7 @@ SGBD_cred = 'mariadb+mysqlconnector'
 usuario_cred = 'root'
 senha_cred = ''
 servidor_cred = 'localhost'
-database_cred = 'ged_contabilidade'
+database_cred = ''
 
 
-SECRET_KEY_cred = 'Control_GED'
+SECRET_KEY_cred = ''
