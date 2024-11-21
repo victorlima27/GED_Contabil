@@ -1,2 +1,7 @@
 Invoke-WebRequest -Uri "https://dl.min.io/server/minio/release/windows-amd64/minio.exe" -OutFile .\minio.exe
-.\minio.exe server .\MINIO --console-address ":9001"
+.\MINIO\minio.exe server .\MINIO --console-address ":9001"
+
+Gerei o certificado atraves do openssl aplicativo e criei um certificado para o servidor
+%%USERPROFILE%%\.minio\certs
+  private.key
+  public.crt

@@ -5,6 +5,7 @@ from flask_bcrypt import Bcrypt
 from flask_mail import Mail
 from flasgger import Swagger
 from flask_migrate import Migrate
+from flask_login import LoginManager
 
 app = Flask(__name__)
 
@@ -23,10 +24,18 @@ csrf = CSRFProtect(app)
 bcrypt = Bcrypt(app)
 mail = Mail(app)
 swagger = Swagger(app)
-    
+login_manager = LoginManager()
+migrate = Migrate(app,db)
+
+
+
 # Importe suas rotas
-from models import *
-from route_example import *
+from rotas_notasfiscais import *
+from rotas_extratosbancarios import *
+from rotas_documentos import *
+from rotas import *
+from users import *
+
 
 
 if __name__ == '__main__':

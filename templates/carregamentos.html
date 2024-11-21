@@ -1,0 +1,74 @@
+{% extends "index.html" %}
+{% block conteudo %}
+<div class="d-flex flex-column justify-content-center align-items-center" style="margin-top: 4%;">
+    <span class="text-light" style="font-size: 35px;">{{ text_page }}</span>
+    <span style="display: block; height: 3px; background-color: white; width: 10%; margin-top: 2px;"></span>
+</div>
+<div class="container-fluid" style="margin-top: -7%;">
+    <div class="row">
+        <!-- Conteúdo principal (apenas Notas Fiscais e Extratos Bancários) -->
+        <div class="col-md-12">
+            <div class="d-flex flex-column justify-content-center align-items-center min-vh-100 text-light">
+                <div class="row w-75 mt-4">
+                    <!-- Notas Fiscais -->
+                    <div class="col-md-6 d-flex flex-column align-items-center">
+                        <h2 class="text-uppercase fw-bold mb-3">Notas Fiscais</h2>
+                        <a href="{{ url_for('notasfiscais') }}" class="btn btn-light btn-lg text-primary rounded-pill px-5">
+                            Adicionar
+                        </a>
+                    </div>
+                    <!-- Extratos Bancários -->
+                    <div class="col-md-6 d-flex flex-column align-items-center">
+                        <h2 class="text-uppercase fw-bold mb-3">Extratos Bancários</h2>
+                        <a href="{{ url_for('extratosbancarios') }}" class="btn btn-light btn-lg text-primary rounded-pill px-5">
+                            Adicionar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+<!-- <div class="d-flex flex-column justify-content-center align-items-center min-vh-100" style="margin-top: -100px;">
+    <div class="row container">
+        <div class="row">
+            <div class="col-md-4">
+                <p class="text-center text-light" style="font-size: 50px;">Vamos Começar ?</p>
+            </div>
+            
+            <div class="col-md-4 offset-md-4">
+                <a href="{{ url_for('notasfiscais') }}" class="card shadow text-decoration-none rounded-pill btn btn-light">
+                    <div class="card-body d-flex align-items-center">
+                        <span class="text-center text-primary fs-4">Adicionar meus documentos</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+    </div>
+    <div class="row container">
+        <div class="row">
+            <div class="col-md-4">
+                <p class="text-center text-light" style="font-size: 50px;">Vamos Começar ?</p>
+            </div>
+            
+            <div class="col-md-4 offset-md-4">
+                <a href="{{ url_for('home') }}" class="card shadow text-decoration-none rounded-pill btn btn-light">
+                    <div class="card-body d-flex align-items-center">
+                        <span class="text-center text-primary fs-4">Adicionar meus documentos</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div> -->

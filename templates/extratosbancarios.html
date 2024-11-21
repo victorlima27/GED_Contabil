@@ -1,0 +1,298 @@
+{% extends "index.html" %}
+{% block conteudo %}
+<div class="container-fluid" style="margin-top: 4%;">
+    <div class="row">
+        <!-- Coluna de Instruções -->
+        <div class="col-md-6 bg-primary text-light d-flex flex-column justify-content-center align-items-start p-5">
+            <h2 class="fw-bold">Selecione os Arquivos dos Extratos Bancários</h2>
+            <p class="mt-3">
+                Nesta seção, você deverá realizar o carregamento dos arquivos nos formatos <b>.pdf</b> e <b>.ofx</b>.
+                Selecione os documentos a partir do seu dispositivo e envie-os para o sistema conforme solicitado.
+            </p>
+            <p class="fw-bold mt-3">
+                *Os arquivos deverão ser adicionados em conjunto. Para cada arquivo <b>PDF</b>, será necessário
+                o arquivo <b>OFX</b> correspondente.
+            </p>
+        </div>
+
+        <!-- Coluna de Upload -->
+        <div class="col-md-6 bg-light d-flex flex-column justify-content-center align-items-center p-5">
+            <h2 class="text-primary fw-bold mb-4">Extratos Bancários</h2>
+            <!-- Formulário Flask -->
+            <form id="uploadForm" method="POST" action="{{ url_for('upload_file_extrato') }}" enctype="multipart/form-data">
+                {{ form.csrf_token() }}
+
+                <!-- Campo para Arquivo PDF -->
+                <div class="mb-4">
+                    {{ form.files_pdf.label(class="form-label fw-bold")}}                    
+                    <div class="input-group">
+                        <!-- <span class="input-group-text bg-light">
+                            <i class="bi bi-folder-fill text-primary"></i>
+                        </span> -->
+                        {{ form.files_pdf(class_="form-control", id="pdfInput", accept=".pdf") }}
+                        <span id="pdfStatus" class="input-group-text bg-light">
+                            <i class="bi bi-x-circle text-danger"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Campo para Arquivo OFX -->
+                <div class="mb-4">
+                    {{ form.files_ofx.label(class_="form-label fw-bold") }}
+                    <div class="input-group">
+                        {{ form.files_ofx(class_="form-control", id="ofxInput", accept=".ofx") }}
+                        <!-- <span class="input-group-text bg-light">
+                            <i class="bi bi-folder-fill text-primary"></i>
+                        </span> -->
+                        <span id="ofxStatus" class="input-group-text bg-light">
+                            <i class="bi bi-x-circle text-danger"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Campo para Banco -->
+                <div class="mb-4">
+                    {{ form.banco.label(class_="form-label fw-bold") }}
+                    <div class="input-group">
+                        {{ form.banco(class_="form-control") }}
+                    </div>
+                </div>
+
+                <!-- Botão de Enviar -->
+                <div class="mt-4">
+                    {{ form.submit(class_="btn btn-primary btn-lg w-100", id="submitButton", disabled=True) }}
+                </div>
+
+                <!-- Exibição dos Resultados -->
+                <div id="result" class="mt-4"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const pdfInput = document.getElementById('pdfInput');
+        const ofxInput = document.getElementById('ofxInput');
+        const pdfStatus = document.getElementById('pdfStatus');
+        const ofxStatus = document.getElementById('ofxStatus');
+        const submitButton = document.getElementById('submitButton');
+        const resultDiv = document.getElementById('result');
+    
+        let pdfFile = null;
+        let ofxFile = null;
+    
+        // Função para verificar os arquivos e exibir resultados
+        async function verificarArquivos() {
+            if (!pdfFile || !ofxFile) {
+                resultDiv.textContent = "Por favor, selecione ambos os arquivos antes de continuar.";
+                resultDiv.style.color = "red";
+                pdfStatus.innerHTML = "❌";
+                ofxStatus.innerHTML = "❌";
+                submitButton.disabled = true;
+                return;
+            }
+    
+            const formData = new FormData();
+            formData.append("pdf", pdfFile); // Nome do campo deve ser 'pdf'
+            formData.append("ofx", ofxFile); // Nome do campo deve ser 'ofx'
+    
+            try {
+                const response = await fetch("http://127.0.0.1:9999/processar", {
+                    method: "POST",
+                    body: formData,
+                });
+    
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || "Erro ao verificar os arquivos.");
+                }
+    
+                const data = await response.json();
+    
+                // Atualizar os resultados na interface
+                resultDiv.textContent = `Saldo PDF: R$ ${data.saldo_pdf.toFixed(2)}, Saldo OFX: R$ ${data.saldo_ofx.toFixed(2)}. Saldos Iguais: ${data.iguais ? "Sim" : "Não"}`;
+                resultDiv.style.color = data.iguais ? "green" : "red";
+    
+                // Atualizar ícones e botão de envio
+                if (data.iguais) {
+                    pdfStatus.innerHTML = "✔️";
+                    ofxStatus.innerHTML = "✔️";
+                    submitButton.disabled = false; // Habilitar o botão
+                } else {
+                    pdfStatus.innerHTML = "❌";
+                    ofxStatus.innerHTML = "❌";
+                    submitButton.disabled = true; // Desabilitar o botão
+                }
+            } catch (error) {
+                console.error(error);
+                resultDiv.textContent = `Erro: ${error.message}`;
+                resultDiv.style.color = "red";
+                pdfStatus.innerHTML = "❌";
+                ofxStatus.innerHTML = "❌";
+                submitButton.disabled = true; // Desabilitar o botão em caso de erro
+            }
+        }
+    
+        // Eventos para capturar arquivos
+        pdfInput.addEventListener('change', (e) => {
+            pdfFile = e.target.files[0];
+            console.log("PDF selecionado:", pdfFile);
+            verificarArquivos(); // Verifica automaticamente ao selecionar
+        });
+    
+        ofxInput.addEventListener('change', (e) => {
+            ofxFile = e.target.files[0];
+            console.log("OFX selecionado:", ofxFile);
+            verificarArquivos(); // Verifica automaticamente ao selecionar
+        });
+    });
+    </script>
+    
+{% endblock %}
+
+
+
+
+//     const pdfInput = document.getElementById('pdfInput');
+//     const ofxInput = document.getElementById('ofxInput');
+//     const pdfStatus = document.getElementById('pdfStatus');
+//     const ofxStatus = document.getElementById('ofxStatus');
+//     const submitButton = document.getElementById('submitButton');
+
+//     let saldoPdf = null;
+//     let saldoOfx = null;
+
+//     // Função para processar o PDF
+//     async function processarPDF(file) {
+//         return new Promise((resolve, reject) => {
+//             const fileReader = new FileReader();
+//             fileReader.onload = async function () {
+//                 const typedArray = new Uint8Array(this.result);
+
+//                 try {
+//                     const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+//                     let saldo = null;
+
+//                     for (let i = 0; i < pdf.numPages; i++) {
+//                         const page = await pdf.getPage(i + 1);
+//                         const textContent = await page.getTextContent();
+//                         const lines = textContent.items.map(item => item.str);
+
+//                         // Procurar "Saldo de conta corrente" e pegar a linha seguinte
+//                         for (let j = 0; j < lines.length; j++) {
+//                             if (lines[j].includes("Saldo de conta corrente")) {
+//                                 if (j + 1 < lines.length) {
+//                                     const valorLinhaSeguinte = lines[j + 1].trim();
+//                                     saldo = parseFloat(
+//                                         valorLinhaSeguinte
+//                                             .replace("R$", "")
+//                                             .replace(".", "")
+//                                             .replace(",", ".")
+//                                     );
+//                                     console.log(`Saldo encontrado no PDF: R$ ${saldo.toFixed(2)}`);
+//                                     resolve(saldo); // Retornar o saldo encontrado
+//                                     return;
+//                                 }
+//                             }
+//                         }
+//                     }
+
+//                     reject("Saldo de conta corrente não encontrado no PDF.");
+//                 } catch (error) {
+//                     reject("Erro ao processar o PDF: " + error.message);
+//                 }
+//             };
+
+//             fileReader.onerror = function () {
+//                 reject("Erro ao ler o arquivo PDF.");
+//             };
+
+//             fileReader.readAsArrayBuffer(file);
+//         });
+//     }
+
+//     // Função para processar o OFX
+//     async function processarOFX(file) {
+//         return new Promise((resolve, reject) => {
+//             const fileReader = new FileReader();
+//             fileReader.onload = function () {
+//                 const parser = new DOMParser();
+//                 const xml = parser.parseFromString(this.result, "text/xml");
+
+//                 try {
+//                     // Procurar pelo nó <BALAMT> dentro de <LEDGERBAL>
+//                     const saldoFinalNode = xml.querySelector("LEDGERBAL BALAMT");
+
+//                     if (!saldoFinalNode) {
+//                         reject("Saldo final não encontrado no OFX.");
+//                         return;
+//                     }
+
+//                     // Extrair e converter o saldo final
+//                     const saldoFinal = parseFloat(
+//                         saldoFinalNode.textContent.trim()
+//                             .replace(".", "")
+//                             .replace(",", ".")
+//                     );
+
+//                     console.log(`Saldo encontrado no OFX: R$ ${saldoFinal.toFixed(2)}`);
+//                     resolve(saldoFinal);
+//                 } catch (error) {
+//                     reject("Erro ao processar o OFX: " + error.message);
+//                 }
+//             };
+
+//             fileReader.onerror = function () {
+//                 reject("Erro ao ler o arquivo OFX.");
+//             };
+
+//             fileReader.readAsText(file, "latin1");
+//         });
+//     }
+
+//     // Função para validar os saldos
+//     function validarSaldos() {
+//         if (saldoPdf !== null && saldoOfx !== null) {
+//             console.log(`Saldo do PDF: R$ ${saldoPdf.toFixed(2)}`);
+//             console.log(`Saldo do OFX: R$ ${saldoOfx.toFixed(2)}`);
+
+//             if (Math.abs(saldoPdf - saldoOfx) < 0.01) {
+//                 console.log("Os saldos são iguais!");
+//                 pdfStatus.textContent = "✔️";
+//                 ofxStatus.textContent = "✔️";
+//                 submitButton.disabled = false; // Habilitar botão
+//             } else {
+//                 console.log("Os saldos são diferentes!");
+//                 pdfStatus.textContent = "❌";
+//                 ofxStatus.textContent = "❌";
+//                 submitButton.disabled = true; // Desabilitar botão
+//             }
+//         }
+//     }
+
+//     // Eventos para processar os arquivos selecionados
+//     pdfInput.addEventListener('change', async () => {
+//         if (pdfInput.files.length > 0) {
+//             try {
+//                 saldoPdf = await processarPDF(pdfInput.files[0]);
+//                 validarSaldos();
+//             } catch (error) {
+//                 console.error(error);
+//                 pdfStatus.textContent = "❌";
+//             }
+//         }
+//     });
+
+//     ofxInput.addEventListener('change', async () => {
+//         if (ofxInput.files.length > 0) {
+//             try {
+//                 saldoOfx = await processarOFX(ofxInput.files[0]);
+//                 validarSaldos();
+//             } catch (error) {
+//                 console.error(error);
+//                 ofxStatus.textContent = "❌";
+//             }
+//         }
+//     });
+// });

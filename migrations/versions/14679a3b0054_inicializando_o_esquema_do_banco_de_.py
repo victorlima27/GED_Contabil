@@ -1,16 +1,18 @@
-"""Initial migration
+"""Inicializando o esquema do banco de dados
 
-Revision ID: 571d99c7345f
+Revision ID: 14679a3b0054
 Revises: 
-Create Date: 2024-10-30 00:26:42.546200
+Create Date: 2024-11-15 14:26:57.238069
 
 """
 from alembic import op
 import sqlalchemy as sa
+import datetime
+from flask_bcrypt import generate_password_hash
 
 
 # revision identifiers, used by Alembic.
-revision = '571d99c7345f'
+revision = '14679a3b0054'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -23,15 +25,13 @@ def upgrade():
     sa.Column('nome_banco', sa.String(length=100), nullable=True),
     sa.PrimaryKeyConstraint('cod_banco')
     )
-    op.create_table('cliente',
-    sa.Column('cpf_cnpj', sa.String(length=14), nullable=False),
-    sa.Column('nome_cliente', sa.String(length=100), nullable=True),
-    sa.Column('telefone_cliente', sa.String(length=15), nullable=True),
-    sa.Column('endereco_cliente', sa.Text(), nullable=True),
-    sa.Column('email_cliente', sa.String(length=255), nullable=True),
-    sa.Column('senha_cliente', sa.String(length=128), nullable=True),
-    sa.Column('ultimo_login_cliente', sa.Date(), nullable=True),
-    sa.PrimaryKeyConstraint('cpf_cnpj')
+    op.create_table('empresa',
+    sa.Column('cnpj', sa.String(length=14), nullable=False),
+    sa.Column('razao_social_empresa', sa.Text(), nullable=True),
+    sa.Column('email_empresa', sa.Text(), nullable=True),
+    sa.Column('telefone_empresa', sa.String(length=11), nullable=True),
+    sa.Column('tributacao_empresa', sa.Text(), nullable=True),
+    sa.PrimaryKeyConstraint('cnpj')
     )
     op.create_table('tipo_arquivo',
     sa.Column('id_tipo_arquivo', sa.Integer(), autoincrement=True, nullable=False),
@@ -49,15 +49,30 @@ def upgrade():
     sa.Column('modelo_nf', sa.Integer(), nullable=True),
     sa.PrimaryKeyConstraint('id_tipo_nf')
     )
+    op.create_table('usuario',
+    sa.Column('cpf', sa.String(length=11), nullable=False),
+    sa.Column('cnpj', sa.String(length=14), nullable=False),
+    sa.Column('nome_usuario', sa.String(length=100), nullable=True),
+    sa.Column('telefone_usuario', sa.String(length=11), nullable=True),
+    sa.Column('email_usuario', sa.Text(), nullable=True),
+    sa.Column('senha_usuario', sa.Text(), nullable=True),
+    sa.Column('cargo_funcao_usuario', sa.Text(), nullable=True),
+    sa.Column('nivel_acesso_usuario', sa.Text(), nullable=True),
+    sa.Column('ultimo_login_usuario', sa.Date(), nullable=True),
+    sa.ForeignKeyConstraint(['cnpj'], ['empresa.cnpj'], ),
+    sa.PrimaryKeyConstraint('cpf')
+    )
     op.create_table('arquivo',
     sa.Column('id_arquivo', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('cnpj', sa.String(length=14), nullable=False),
+    sa.Column('cpf', sa.String(length=11), nullable=False),
     sa.Column('id_tipo_arquivo', sa.Integer(), nullable=False),
-    sa.Column('cpf_cnpj', sa.String(length=14), nullable=False),
     sa.Column('nome_arquivo', sa.String(length=255), nullable=True),
     sa.Column('data_hora_upload_arquivo', sa.DateTime(), nullable=True),
     sa.Column('tipo_arquivo', sa.String(length=50), nullable=True),
     sa.Column('url_minio_arquivo', sa.Text(), nullable=True),
-    sa.ForeignKeyConstraint(['cpf_cnpj'], ['cliente.cpf_cnpj'], ),
+    sa.ForeignKeyConstraint(['cnpj'], ['usuario.cnpj'], ),
+    sa.ForeignKeyConstraint(['cpf'], ['usuario.cpf'], ),
     sa.ForeignKeyConstraint(['id_tipo_arquivo'], ['tipo_arquivo.id_tipo_arquivo'], ),
     sa.PrimaryKeyConstraint('id_arquivo')
     )
@@ -115,9 +130,65 @@ def upgrade():
     sa.ForeignKeyConstraint(['id_erro'], ['tipo_erro.id_erro'], ),
     sa.PrimaryKeyConstraint('id_arquivo')
     )
-    # ### end Alembic commands ###
+    
+    
+    # Tipo Arquivo
+    op.execute("""
+        INSERT INTO tipo_arquivo (descricao_arquivo) VALUES
+        ('PDF'),
+        ('XML'),
+        ('PDF/A'),
+        ('OFX');
+    """)
 
+    # Bancos
+    op.execute("""
+        INSERT INTO banco (cod_banco, nome_banco) VALUES
+        (1, 'Banco do Brasil'),
+        (33, 'Banco Santander'),
+        (104, 'Caixa Econômica Federal'),
+        (237, 'Banco Bradesco'),
+        (341, 'Banco Itaú Unibanco'),
+        (399, 'HSBC Bank Brasil'),
+        (756, 'Bancoob'),
+        (260, 'Nu Pagamentos (Nubank)'),
+        (290, 'Pagseguro'),
+        (77, 'Banco Inter'),
+        (380, 'PicPay Bank');
+    """)
 
+    # Tipo NF
+    op.execute("""
+        INSERT INTO tipo_nf (descricao_nf, modelo_nf) VALUES
+        ('Nota Fiscal Eletrônica (NFe)', 55),
+        ('Nota Fiscal de Serviço Eletrônica (NFSe)', 57);
+    """)
+
+    # Tipo Erro
+    op.execute("""
+        INSERT INTO tipo_erro (descricao_erro) VALUES
+        ('Sem Erros Encontrados'),
+        ('Formato de arquivo inválido'),
+        ('CNPJ/CPF do cliente não corresponde ao arquivo enviado'),
+        ('Arquivo XML malformado'),
+        ('Inconsistência no valor informado'),
+        ('Assinatura digital inválida'),
+        ('Erro de integração com o banco de dados');
+    """)
+
+        # Inserindo Empresa de Teste
+    op.execute("""
+        INSERT INTO empresa (cnpj, razao_social_empresa, email_empresa, telefone_empresa, tributacao_empresa)
+        VALUES ('102760847000162', 'Empresa Teste', 'victor.lima@gedcontabil.loca', '2730387700', 'Simples Nacional');
+    """)
+
+    # Inserindo Usuário de Teste
+    op.execute(f"""
+        INSERT INTO usuario (cpf, cnpj, nome_usuario, telefone_usuario, email_usuario, senha_usuario, ultimo_login_usuario)
+        VALUES ('12345678912', '102760847000162', 'Usuário Teste', '27999999999', 'teste@teste.com.br', 
+        '{generate_password_hash('123456').decode('utf-8')}', '{datetime.date.today()}');
+    """)
+# ### end Alembic commands ###
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('validacao')
@@ -125,9 +196,16 @@ def downgrade():
     op.drop_table('extrato_pdf')
     op.drop_table('extrato_ofx')
     op.drop_table('arquivo')
+    op.drop_table('usuario')
     op.drop_table('tipo_nf')
     op.drop_table('tipo_erro')
     op.drop_table('tipo_arquivo')
-    op.drop_table('cliente')
+    op.drop_table('empresa')
     op.drop_table('banco')
     # ### end Alembic commands ###
+
+    op.execute("DELETE FROM tipo_arquivo WHERE descricao_arquivo IN ('PDF', 'XML', 'PDF/A', 'OFX');")
+    op.execute("DELETE FROM banco WHERE codbanco IN (1, 33, 104, 237, 341, 399, 756, 260, 290, 77, 380);")
+    op.execute("DELETE FROM tipo_nf WHERE descricao_nf IN ('Nota Fiscal Eletrônica (NFe)', 'Nota Fiscal de Serviço Eletrônica (NFSe)');")
+    op.execute("DELETE FROM tipo_erro WHERE descricao_erro IN ('Formato de arquivo inválido', 'CNPJ/CPF do cliente não corresponde ao arquivo enviado', 'Arquivo XML malformado', 'Inconsistência no valor informado', 'Assinatura digital inválida', 'Erro de integração com o banco de dados');")
+

@@ -1,0 +1,17 @@
+{% extends "index.html" %}
+{% block conteudo %}
+<div class="d-flex flex-column justify-content-center align-items-center" style="margin-top: 4%;">
+    <span class="text-light" style="font-size: 35px;">{{ text_page }}</span>
+    <span style="display: block; height: 3px; background-color: white; width: 10%; margin-top: 2px;"></span>
+</div>
+
+<div class="d-flex flex-column justify-content-center align-items-center min-vh-100" style="margin-top: -7%;">
+    <p class="text-center text-light" style="font-size: 50px;">Vamos Começar ?</p>
+    <a href="{{ url_for('carregamentos') }}" class="card shadow text-decoration-none rounded-pill mt-5 btn btn-light" style="height: 100px; width: 800px; font-size: 30px;">
+        <div class="card-body mx-auto d-flex align-items-center">
+            <span class="text-center text-primary fs-2">Adicionar meus documentos</span>
+        </div>
+    </a>
+</div>
+
+{% endblock %}

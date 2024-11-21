@@ -1,10 +1,10 @@
 from sqlalchemy import DateTime, create_engine
 from sqlalchemy.orm import relationship, aliased
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from app import app,db
+from app import db
+from flask_login import UserMixin, LoginManager
 
-migrate = Migrate(app,db)
+login_manager = LoginManager()
 
 class TipoNF(db.Model):
     __tablename__ = 'tipo_nf'
@@ -38,25 +38,44 @@ class Banco(db.Model):
 
     def __repr__(self):
         return '<Banco %r>' % self.nome_banco
-
-class Cliente(db.Model):
-    __tablename__ = 'cliente'
-    cpf_cnpj = db.Column(db.String(14), primary_key=True, nullable=False)  # CPF/CNPJ com até 14 caracteres
-    nome_cliente = db.Column(db.String(100), nullable=True)
-    telefone_cliente = db.Column(db.String(15), nullable=True)  # Formato de telefone de até 15 caracteres
-    endereco_cliente = db.Column(db.Text, nullable=True)
-    email_cliente = db.Column(db.String(255), nullable=True)  # E-mail de até 255 caracteres
-    senha_cliente = db.Column(db.String(128), nullable=True)  # Senha de até 128 caracteres
-    ultimo_login_cliente = db.Column(db.Date, nullable=True)
+    
+class Empresa(db.Model):
+    __tablename__ = 'empresa'
+    cnpj = db.Column(db.String(14), primary_key=True, nullable=False)
+    razao_social_empresa = db.Column(db.Text, nullable=True)
+    email_empresa = db.Column(db.Text, nullable=True)
+    telefone_empresa = db.Column(db.String(11), nullable=True)  # Tipo ajustado para INTEGER UNSIGNED
+    tributacao_empresa = db.Column(db.Text, nullable=True)
 
     def __repr__(self):
-        return '<Cliente %r>' % self.nome_cliente
+        return f'<Empresa {self.razao_social_empresa}>'
+
+
+class Usuario(UserMixin, db.Model):
+    __tablename__ = 'usuario'
+    cpf = db.Column(db.String(11), primary_key=True, nullable=False)
+    cnpj = db.Column(db.String(14), db.ForeignKey('empresa.cnpj'), nullable=False)
+    nome_usuario = db.Column(db.String(100), nullable=True)
+    telefone_usuario = db.Column(db.String(11), nullable=True)  # Tipo ajustado para INTEGER UNSIGNED
+    email_usuario = db.Column(db.Text, nullable=True)
+    senha_usuario = db.Column(db.Text, nullable=True)
+    cargo_funcao_usuario = db.Column(db.Text, nullable=True)
+    nivel_acesso_usuario = db.Column(db.Text, nullable=True)
+    ultimo_login_usuario = db.Column(db.Date, nullable=True)
+
+    def __repr__(self):
+        return f'<Usuario {self.nome_usuario}>'
+
+    # Método necessário para o flask-login
+    def get_id(self):
+        return self.cpf
 
 class Arquivo(db.Model):
     __tablename__ = 'arquivo'
     id_arquivo = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
+    cnpj = db.Column(db.String(14), db.ForeignKey('usuario.cnpj'), nullable=False)
+    cpf = db.Column(db.String(11), db.ForeignKey('usuario.cpf'), nullable=False)
     id_tipo_arquivo = db.Column(db.Integer, db.ForeignKey('tipo_arquivo.id_tipo_arquivo'), nullable=False)
-    cpf_cnpj = db.Column(db.String(14), db.ForeignKey('cliente.cpf_cnpj'), nullable=False)
     nome_arquivo = db.Column(db.String(255), nullable=True)  # Nome de arquivo até 255 caracteres
     data_hora_upload_arquivo = db.Column(db.DateTime, nullable=True)
     tipo_arquivo = db.Column(db.String(50), nullable=True)  # Tipo de arquivo de até 50 caracteres
