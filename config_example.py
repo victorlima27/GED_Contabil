@@ -1,5 +1,6 @@
 import os
 from env.credenciais import SECRET_KEY_cred,SGBD_cred,usuario_cred,senha_cred,servidor_cred,database_cred
+from sqlalchemy_utils import database_exists, create_database
 
 SECRET_KEY = SECRET_KEY_cred
 
@@ -15,3 +16,7 @@ SQLALCHEMY_DATABASE_URI = \
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 UPLOAD_PATH = os.path.dirname(os.path.abspath(__file__)) + '/upload'
+
+if not database_exists(SQLALCHEMY_DATABASE_URI):
+    create_database(SQLALCHEMY_DATABASE_URI)
+    print("Banco de dados criado com sucesso")

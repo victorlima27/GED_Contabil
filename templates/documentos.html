@@ -1,6 +1,6 @@
 {% extends "index.html" %}
 {% block conteudo %}
-<div class="container p-4 bg-light rounded" style="margin-top: 4%;">
+<div class="container mt-5 p-4 bg-light rounded">
     <h3 class="text-center text-primary mb-4">MEUS DOCUMENTOS</h3>
     <table class="table table-striped table-bordered text-center">
         <thead class="table-primary">
@@ -14,32 +14,65 @@
             </tr>
         </thead>
         <tbody>
-            <!-- Exemplo de dados -->
             {% for documento in documentos %}
             <tr>
                 <td>{{ documento.id_arquivo }}</td>
                 <td>{{ documento.nome_arquivo }}</td>
                 <td>{{ documento.tipo_arquivo }}</td>
-                <td>{{ dat.strftime(documento.data_hora_upload_arquivo, "%d/%m/%Y" " %H:%M") }}</td>
+                <td>{{ documento.data_hora_upload_arquivo.strftime('%d-%m-%Y') if documento.data_hora_upload_arquivo else 'N/A' }}</td>
+                {% if not documento.tem_erro %}
                 <td>
-                    {% if not documento.tem_erro %}
                     <i class="bi bi-check-circle-fill text-success"></i> Sem Erros
-                    {% else %}
-                    <i class="bi bi-exclamation-triangle-fill text-danger"></i> Com Erros
-                    {% endif %}
                 </td>
                 <td>
-                    {% if not documento.tem_erro %}
-                    <a href="{{ url_for('download_file', id_arquivo=documento.id_arquivo) }}" class="btn btn-link text-decoration-none text-dark">
+                    <a href="/download/{{ documento.id_arquivo }}" class="btn btn-link text-decoration-none text-dark">
                         <i class="bi bi-download"></i>
-                    {% else %}
-                    <a href="/detalhes/{{ documento.id_arquivo }}" class="btn btn-link text-decoration-none text-primary">Ver Detalhes</a>
-                    {% endif %}
                     </a>
                 </td>
+                {% else %}
+                <td>
+                    <i class="bi bi-exclamation-triangle-fill text-danger"></i> Com Erros
+                </td>
+                <td>
+                    <button 
+                    class="btn btn-link text-decoration-none text-primary" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#modalErro{{ documento.id_arquivo }}">
+                    Ver Detalhes
+                    </button>
+                </td>
+                {% endif %}
+                <!-- Botão para abrir o modal -->
             </tr>
+
+            <!-- Modal para cada documento -->
+            <div class="modal fade" id="modalErro{{ documento.id_arquivo }}" tabindex="-1" aria-labelledby="modalErroLabel{{ documento.id_arquivo }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalErroLabel{{ documento.id_arquivo }}">Detalhes do Arquivo:{% if documento.nome_arquivo|length > 20 %}
+                                {{ documento.nome_arquivo[:20] }}...
+                                {% else %}
+                                {{ documento.nome_arquivo }}
+                                {% endif %}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            {% if not documento.tem_erro %}
+                            <p class="text-success">Este arquivo não possui erros.</p>
+                            {% else %}
+                            <p><strong>Erro:</strong> {{ documento.descricao_erro }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
 {% endblock %}

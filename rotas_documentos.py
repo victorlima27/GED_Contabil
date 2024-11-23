@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, render_template,session, redirect,url
 from minio.error import S3Error
 from flask_login import current_user, login_required
 from app import app,db, gerar_hash_sha256
-from models import  Arquivo,Validacao,TipoArquivo
+from models import  Arquivo,Validacao,TipoArquivo,TipoErro
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from minio_conf import minio_client,MINIO_BUCKET_NAME
@@ -10,7 +10,6 @@ from minio_conf import minio_client,MINIO_BUCKET_NAME
 @app.route('/documentos')
 @login_required
 def documentos():
-    from models import Arquivo,Validacao
     documentos = (
         db.session.query(
             Arquivo.id_arquivo,
@@ -18,12 +17,14 @@ def documentos():
             Arquivo.tipo_arquivo,
             Arquivo.data_hora_upload_arquivo,
             Validacao.status_validacao,
-            Validacao.id_erro
+            Validacao.id_erro,
+            TipoErro.descricao_erro  # Adicione a descrição do erro
         )
         .outerjoin(Validacao, Arquivo.id_arquivo == Validacao.id_arquivo)
+        .outerjoin(TipoErro, Validacao.id_erro == TipoErro.id_erro)
         .all()
     )
-    # Converter os resultados para uma lista de dicionários
+
     documentos_data = []
     for doc in documentos:
         documentos_data.append({
@@ -33,11 +34,44 @@ def documentos():
             "data_hora_upload_arquivo": doc.data_hora_upload_arquivo,
             "status_validacao": doc.status_validacao,
             "id_erro": doc.id_erro,
-            "tem_erro": doc.id_erro != 1  # Determina se tem erro
+            "descricao_erro": doc.descricao_erro if doc.id_erro != 1 else "Sem Erros",
+            "tem_erro": doc.id_erro != 1
         })
 
     dat = datetime
-    return render_template('documentos.html', titulo='GED - Extratos', dat=dat, documentos=documentos_data)
+    return render_template('documentos.html',titulo='GED - Extratos', dat=dat, documentos=documentos_data)
+
+# @app.route('/documentos')
+# @login_required
+# def documentos():
+#     from models import Arquivo,Validacao
+#     documentos = (
+#         db.session.query(
+#             Arquivo.id_arquivo,
+#             Arquivo.nome_arquivo,
+#             Arquivo.tipo_arquivo,
+#             Arquivo.data_hora_upload_arquivo,
+#             Validacao.status_validacao,
+#             Validacao.id_erro
+#         )
+#         .outerjoin(Validacao, Arquivo.id_arquivo == Validacao.id_arquivo)
+#         .all()
+#     )
+#     # Converter os resultados para uma lista de dicionários
+#     documentos_data = []
+#     for doc in documentos:
+#         documentos_data.append({
+#             "id_arquivo": doc.id_arquivo,
+#             "nome_arquivo": doc.nome_arquivo,
+#             "tipo_arquivo": doc.tipo_arquivo,
+#             "data_hora_upload_arquivo": doc.data_hora_upload_arquivo,
+#             "status_validacao": doc.status_validacao,
+#             "id_erro": doc.id_erro,
+#             "tem_erro": doc.id_erro != 1  # Determina se tem erro
+#         })
+
+#     dat = datetime
+#     return render_template('documentos.html', titulo='GED - Extratos', dat=dat, documentos=documentos_data)
 
 @app.route('/download_file/<int:id_arquivo>', methods=['GET'])
 @login_required

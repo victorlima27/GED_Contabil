@@ -191,6 +191,61 @@ def processar():
         print(f"Saldo PDF: {saldo_pdf}, Saldo OFX: {saldo_ofx}")
 
         iguais = abs(saldo_pdf - saldo_ofx) < 0.01
+        if iguais is False:
+            # Informações do usuário logado
+            usuario = current_user
+
+            # Gerar hash SHA-256 para os arquivos
+            pdf_hash = gerar_hash_sha256(pdf_file.stream)
+            ofx_hash = gerar_hash_sha256(ofx_file.stream)
+
+            # Registro na tabela Arquivo para PDF
+            novo_arquivo_pdf = Arquivo(
+                cnpj=usuario.cnpj,
+                cpf=usuario.cpf,
+                id_tipo_arquivo=3,  # Assumindo que 3 é PDF/A
+                nome_arquivo=pdf_file.filename,
+                data_hora_upload_arquivo=datetime.now(),
+                tipo_arquivo='Extrato PDF/A',
+                url_minio_arquivo=f"{MINIO_BUCKET_NAME}/{pdf_file}",
+            )
+            db.session.add(novo_arquivo_pdf)
+            db.session.flush()
+
+            # Registro de validação do PDF
+            validacao_pdf = Validacao(
+                id_arquivo=novo_arquivo_pdf.id_arquivo,
+                id_erro=5,
+                status_validacao=False,
+                data_hora_validacao=datetime.now(),
+                checksum_validacao=pdf_hash
+            )
+            db.session.add(validacao_pdf)
+            # Registro na tabela Arquivo para OFX
+            novo_arquivo_ofx = Arquivo(
+                cnpj=usuario.cnpj,
+                cpf=usuario.cpf,
+                id_tipo_arquivo=4,  # Assumindo que 2 é OFX
+                nome_arquivo=ofx_file.filename,
+                data_hora_upload_arquivo=datetime.now(),
+                tipo_arquivo='Extrato OFX',
+                url_minio_arquivo=f"{MINIO_BUCKET_NAME}/{ofx_file}",
+            )
+            db.session.add(novo_arquivo_ofx)
+            db.session.flush()
+            
+            # Registro de validação do OFX
+            validacao_ofx = Validacao(
+                id_arquivo=novo_arquivo_ofx.id_arquivo,
+                id_erro=5,
+                status_validacao=True,
+                data_hora_validacao=datetime.now(),
+                checksum_validacao=ofx_hash
+            )
+            db.session.add(validacao_ofx)
+
+            # Commit final no banco
+            db.session.commit()
 
         return jsonify({
             "saldo_pdf": saldo_pdf,

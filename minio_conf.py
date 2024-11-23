@@ -2,6 +2,7 @@ from minio import Minio
 from minio.error import S3Error
 import os
 import urllib3
+from env.credenciais import ENDPOINT, ACCESS_KEY, SECRET_KEY,BUCKET_NAME,SECURE
 
 # # Configurar conexão HTTPS com certificado confiável
 # http_client = urllib3.PoolManager(
@@ -11,11 +12,11 @@ import urllib3
 urllib3.disable_warnings()
 http_client = urllib3.PoolManager(cert_reqs="CERT_NONE")
 
-MINIO_ENDPOINT = "localhost:9000"  # URL do servidor MinIO
-MINIO_ACCESS_KEY = "JPj2A1cPjtwTlrB4JpuN"
-MINIO_SECRET_KEY = "1H4VFNxTj3jBqu8Td3apDl80CpkdaCnJN1jxzThA"
-MINIO_BUCKET_NAME = "gedcontabilidade"
-MINIO_SECURE = True  # Defina como True se o MinIO estiver usando HTTPS
+MINIO_ENDPOINT = ENDPOINT  # URL do servidor MinIO
+MINIO_ACCESS_KEY = ACCESS_KEY
+MINIO_SECRET_KEY = SECRET_KEY
+MINIO_BUCKET_NAME = BUCKET_NAME
+MINIO_SECURE = SECURE  # Defina como True se o MinIO estiver usando HTTPS
 
 # Inicializa o cliente MinIO
 minio_client = Minio(
